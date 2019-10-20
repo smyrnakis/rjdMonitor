@@ -119,10 +119,10 @@ void thingSpeakRequest() {
 
 // Handle HTML page calls
 void handle_OnConnect() {
-  digitalWrite(PCBLED, LOW);
+  digitalWrite(ESPLED, LOW);
   getSensorData();
   server.send(200, "text/html", SendHTML(temperature,humidity,formatedTime)); 
-  digitalWrite(PCBLED, HIGH);
+  digitalWrite(ESPLED, HIGH);
 }
 
 void handle_NotFound(){
