@@ -12,6 +12,7 @@
 #define PCBLED D0 // 16 , LED_BUILTIN
 #define DHTPIN D1
 #define ESPLED D4 // 2
+#define ANLG_IN A0
 
 
 char defaultSSID[] = WIFI_DEFAULT_SSID;
@@ -25,14 +26,18 @@ char apiKey[] = THINGSP_WR_APIKEY;
 String httpHeader;
 String localIPaddress;
 String formatedTime;
+// short lastRecorderTemp;
 
 float temperature;
 float humidity;
+int analogValue = 0;
 bool movement;
 bool allowNtp = true;
+bool allowEeprom = true;
 
 unsigned long previousMillis = 0;
 
+const int eepromSaveInterval = 60000;
 const int uploadInterval = 15000;
 const int sensorsInterval = 5000;
 const int ntpInterval = 2500;
@@ -113,10 +118,10 @@ void thingSpeakRequest() {
 
 // Handle HTML page calls
 void handle_OnConnect() {
-  digitalWrite(ESPLED, LOW);
+  digitalWrite(PCBLED, LOW);
   getSensorData();
   server.send(200, "text/html", SendHTML(temperature,humidity,formatedTime)); 
-  digitalWrite(ESPLED, HIGH);
+  digitalWrite(PCBLED, HIGH);
 }
 
 void handle_NotFound(){
@@ -150,6 +155,10 @@ String SendHTML(float temperatureValue,float humidityValue,String theTime){
   ptr += "<p>Timestamp: ";
   ptr +=(String)theTime;
   ptr += "</p>";
+
+  // ptr +="<p>Last recorder temp: ";
+  // ptr +=(String)lastRecorderTemp;
+  // ptr +="&#176C</p>";
   
   ptr +="</div>\n";
   ptr +="</body>\n";
@@ -164,12 +173,13 @@ void getSensorData() {
   movement = random(0, 2);
   temperature = dht.readTemperature();
   humidity = dht.readHumidity();
+  // analogValue = analogRead(ANLG_IN);
+  // analogValue = map(analogValue, 0, 1024, 1024, 0);
 }
 
 // Get the time
 void pullNTPtime(bool printData) {
   timeClient.update();
-
   formatedTime = timeClient.getFormattedTime();
 
   if (printData) {
@@ -201,6 +211,24 @@ void loop(){
 
   unsigned long currentMillis = millis();
 
+  if (currentMillis % 100 == 0) {
+    analogValue = analogRead(ANLG_IN);
+    analogValue = map(analogValue, 0, 1024, 1024, 0);
+
+    if (analogValue > 512) {
+      Serial.print("WARNING: flame detected! (");
+      Serial.print(analogValue);
+      Serial.println(")");
+    }
+  }
+
+
+  // if ((currentMillis % eepromSaveInterval == 0) && (allowEeprom)) {
+  //   Serial.println("Saving data in eeprom...");
+
+  //   allowEeprom = false;
+  // }
+
   if ((currentMillis % ntpInterval == 0) && (allowNtp)) {
     // Serial.println("Pulling NTP...");
     pullNTPtime(false);
@@ -214,7 +242,7 @@ void loop(){
 
   if (currentMillis % uploadInterval == 0) {
     // Serial.println("Uploading to thingspeak...");
-    digitalWrite(PCBLED, LOW);
+    digitalWrite(ESPLED, LOW);
     getSensorData();
 
     if (client.connect(thinkSpeakAPI,80)) 
@@ -229,13 +257,14 @@ void loop(){
 
     serialPrintAll();
 
-    digitalWrite(PCBLED, HIGH);
+    digitalWrite(ESPLED, HIGH);
   }
 
   // Repeat every 1 second
   if (currentMillis % secondInterval == 0) {
     // debounce for NTP calls
     allowNtp = true;
+    // allowEeprom = true;
   }
 
   server.handleClient();
