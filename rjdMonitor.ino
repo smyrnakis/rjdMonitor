@@ -213,7 +213,7 @@ void serialPrintAll() {
   Serial.println("%");
   Serial.print("IR value: ");
   Serial.print(String(analogValue));
-  Serial.println("°C");
+  Serial.println(" [0-1024]");
   Serial.println();
 }
 
