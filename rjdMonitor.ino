@@ -40,8 +40,8 @@ unsigned long previousMillis = 0;
 
 const int eepromSaveInterval = 60000;
 const int uploadInterval = 15000;
-const int sensorsInterval = 5000;
-const int ntpInterval = 2500;
+const int sensorsInterval = 6000;
+const int ntpInterval = 2000;
 const int secondInterval = 1000;
 
 const char* thinkSpeakAPI = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
@@ -103,6 +103,8 @@ void thingSpeakRequest() {
   postStr +="&field2=";
   postStr += String(humidity);
   postStr +="&field3=";
+  postStr += String(analogValue);
+  postStr +="&field4=";
   postStr += String(movement);
   postStr += "\r\n\r\n";
 
