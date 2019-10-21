@@ -211,6 +211,9 @@ void serialPrintAll() {
   Serial.print("Humidity: ");
   Serial.print(String(humidity));
   Serial.println("%");
+  Serial.print("IR value: ");
+  Serial.print(String(analogValue));
+  Serial.println("°C");
   Serial.println();
 }
 
