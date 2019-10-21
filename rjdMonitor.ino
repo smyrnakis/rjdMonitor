@@ -99,11 +99,11 @@ void setup() {
 void thingSpeakRequest() {
   String postStr = apiKey;
   postStr +="&field1=";
-  postStr += String(movement);
-  postStr +="&field2=";
   postStr += String(temperature);
-  postStr +="&field3=";
+  postStr +="&field2=";
   postStr += String(humidity);
+  postStr +="&field3=";
+  postStr += String(movement);
   postStr += "\r\n\r\n";
 
   client.print("POST /update HTTP/1.1\n");
@@ -121,7 +121,8 @@ void thingSpeakRequest() {
 void handle_OnConnect() {
   digitalWrite(ESPLED, LOW);
   getSensorData();
-  server.send(200, "text/html", SendHTML(temperature,humidity,formatedTime)); 
+  // server.send(200, "text/html", SendHTML(temperature,humidity,formatedTime)); 
+  server.send(200, "text/html", SendHTML());
   digitalWrite(ESPLED, HIGH);
 }
 
@@ -130,7 +131,8 @@ void handle_NotFound(){
 }
 
 // HTML page structure
-String SendHTML(float temperatureValue,float humidityValue,String theTime){
+String SendHTML(){
+//String SendHTML(float temperatureValue,float humidityValue,String theTime){
   String ptr = "<!DOCTYPE html> <html>\n";
   ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
   ptr +="<title>RJD Monitor</title>\n";
@@ -148,13 +150,16 @@ String SendHTML(float temperatureValue,float humidityValue,String theTime){
   ptr +="</p>";
 
   ptr +="<p>Temperature: ";
-  ptr +=(String)temperatureValue;
+  ptr +=(String)temperature;
   ptr +="&#176C</p>"; // '°' is '&#176' in HTML
   ptr +="<p>Humidity: ";
-  ptr +=(String)humidityValue;
+  ptr +=(String)humidity;
+  ptr +="%</p>";
+  ptr +="<p>IR sensor: ";
+  ptr +=(String)analogValue;
   ptr +="%</p>";
   ptr += "<p>Timestamp: ";
-  ptr +=(String)theTime;
+  ptr +=(String)formatedTime;
   ptr += "</p>";
 
   // ptr +="<p>Last recorder temp: ";
