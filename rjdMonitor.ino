@@ -21,6 +21,8 @@ char defaultPASS[] = WIFI_DEFAULT_PASS;
 
 char apiKey[] = THINGSP_WR_APIKEY;
 
+char otaAuthPin[] = OTA_AUTH_PIN;
+
 // ~~~~ Constants and variables
 //const int DHTPIN = D8; , uint8_t DHTPIN = D8;
 
@@ -106,7 +108,6 @@ void setup() {
 }
 
 
-//
 void handleOTA() {
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
@@ -114,8 +115,7 @@ void handleOTA() {
   // Hostname defaults to esp8266-[ChipID]
   // ArduinoOTA.setHostname("myesp8266");
 
-  // No authentication by default
-  // ArduinoOTA.setPassword((const char *)"123");
+  ArduinoOTA.setPassword((const char *)otaAuthPin);
 
   ArduinoOTA.onStart([]() {
     Serial.println("Start");
