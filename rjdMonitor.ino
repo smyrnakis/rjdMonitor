@@ -44,7 +44,7 @@ const int sensorsInterval = 6000;
 const int ntpInterval = 2000;
 const int secondInterval = 1000;
 
-const char* thinkSpeakAPI = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
+const char* thinkSpeakAPIurl = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
 
 // Network Time Protocol
 const long utcOffsetInSeconds = 7200;
@@ -119,6 +119,32 @@ void thingSpeakRequest() {
   client.print(postStr);
 }
 
+
+// Sending data to Thingspeak (fill beeHive data)
+void thingSpeakRequestBeeHive() {
+  char apiKeyBeehive[] = BEEHIVE_WR_APIKEY;
+  int weight = random(65, 76);
+
+  String postStr = apiKeyBeehive;
+  postStr +="&field1=";
+  postStr += String(temperature);
+  postStr +="&field2=";
+  postStr += String(humidity);
+  postStr +="&field3=";
+  postStr += String(weight);
+  postStr += "\r\n\r\n";
+
+  client.print("POST /update HTTP/1.1\n");
+  client.print("Host: api.thingspeak.com\n");
+  client.print("Connection: close\n");
+  client.print("X-THINGSPEAKAPIKEY: " + (String)apiKeyBeehive + "\n");
+  client.print("Content-Type: application/x-www-form-urlencoded\n");
+  client.print("Content-Length: ");
+  client.print(postStr.length());
+  client.print("\n\n");
+  client.print(postStr);
+}
+
 // Handle HTML page calls
 void handle_OnConnect() {
   digitalWrite(ESPLED, LOW);
@@ -134,7 +160,6 @@ void handle_NotFound(){
 
 // HTML page structure
 String SendHTML(){
-//String SendHTML(float temperatureValue,float humidityValue,String theTime){
   String ptr = "<!DOCTYPE html> <html>\n";
   ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
   ptr +="<title>RJD Monitor</title>\n";
@@ -266,7 +291,7 @@ void loop(){
     digitalWrite(ESPLED, LOW);
     getSensorData();
 
-    if (client.connect(thinkSpeakAPI,80)) 
+    if (client.connect(thinkSpeakAPIurl,80)) 
     {
       thingSpeakRequest();
       client.stop();
@@ -274,6 +299,17 @@ void loop(){
     }
     else {
       Serial.println("ERROR: could not upload data to thingspeak!");
+    }
+
+    // Upload data to beehive
+    if (client.connect(thinkSpeakAPIurl,80)) 
+    {
+      thingSpeakRequestBeeHive();
+      client.stop();
+      // Serial.println("Data uploaded to thingspeak!");
+    }
+    else {
+      Serial.println("ERROR: could not upload data to thingspeak (beehive)!");
     }
 
     serialPrintAll();
