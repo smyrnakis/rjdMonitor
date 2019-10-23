@@ -14,6 +14,9 @@
 #define DHTPIN D1
 #define ESPLED D4 // 2
 #define ANLG_IN A0
+#define GREEN_LED D2
+#define BLUE_LED D3
+#define RED_LED D5 
 
 
 char defaultSSID[] = WIFI_DEFAULT_SSID;
@@ -66,9 +69,15 @@ void setup() {
   pinMode(DHTPIN, INPUT);
   pinMode(PCBLED, OUTPUT);
   pinMode(ESPLED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
+  pinMode(RED_LED, OUTPUT);
   
   digitalWrite(PCBLED, HIGH);
   digitalWrite(ESPLED, HIGH);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(BLUE_LED, LOW);
+  digitalWrite(RED_LED, LOW);
 
   randomSeed(analogRead(0));
 
@@ -359,7 +368,6 @@ void loop(){
     }
 
     serialPrintAll();
-
     digitalWrite(ESPLED, HIGH);
   }
 
