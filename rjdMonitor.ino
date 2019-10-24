@@ -323,6 +323,30 @@ void loop(){
     }
   }
 
+  if ((analogValue >= 10) && (analogValue < 100)) {
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, LOW);
+  } else if ((analogValue >= 100) && (analogValue < 256))
+  {
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, HIGH);
+  } else if ((analogValue >= 256) && (analogValue < 512)) {
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, HIGH);
+    digitalWrite(RED_LED, HIGH);
+  } else if (analogValue >= 512) {
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, HIGH);
+  } else {
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, LOW);
+  }
+  
+
 
   // if ((currentMillis % eepromSaveInterval == 0) && (allowEeprom)) {
   //   Serial.println("Saving data in eeprom...");
