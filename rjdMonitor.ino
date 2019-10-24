@@ -306,19 +306,19 @@ void loop(){
     analogValue = analogRead(ANLG_IN);
     analogValue = map(analogValue, 0, 1024, 1024, 0);
 
-    if (analogValue > 512) {
+    if (analogValue > 768) {
       digitalWrite(PCBLED, LOW);
     }
     else {
       digitalWrite(PCBLED, HIGH);
     }
-    if ((analogValue > 512) && allowFlamePrint) {
+    if ((analogValue > 768) && allowFlamePrint) {
       Serial.print("WARNING: flame detected! (");
       Serial.print(analogValue);
       Serial.println(")");
       allowFlamePrint = false;
     }
-    if ((analogValue < 512) && !allowFlamePrint) {
+    if ((analogValue < 768) && !allowFlamePrint) {
       allowFlamePrint = true;
     }
   }
