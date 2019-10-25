@@ -323,16 +323,16 @@ void loop(){
     }
   }
 
-  if ((analogValue >= 10) && (analogValue < 100)) {
+  if ((analogValue >= 50) && (analogValue < 150)) {
     digitalWrite(GREEN_LED, HIGH);
     digitalWrite(BLUE_LED, LOW);
     digitalWrite(RED_LED, LOW);
-  } else if ((analogValue >= 100) && (analogValue < 256))
+  } else if ((analogValue >= 150) && (analogValue < 300))
   {
     digitalWrite(GREEN_LED, HIGH);
     digitalWrite(BLUE_LED, LOW);
     digitalWrite(RED_LED, HIGH);
-  } else if ((analogValue >= 256) && (analogValue < 512)) {
+  } else if ((analogValue >= 300) && (analogValue < 512)) {
     digitalWrite(GREEN_LED, LOW);
     digitalWrite(BLUE_LED, HIGH);
     digitalWrite(RED_LED, HIGH);
