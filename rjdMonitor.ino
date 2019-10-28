@@ -23,7 +23,7 @@ char defaultSSID[] = WIFI_DEFAULT_SSID;
 char defaultPASS[] = WIFI_DEFAULT_PASS;
 
 char apiKey[] = THINGSP_WR_APIKEY;
-// char autoRemoteMac[] = AUTOREM_MAC;
+char autoRemoteMac[] = AUTOREM_MAC;
 char autoRemotePlus6[] = AUTOREM_PLUS6;
 char autoRemotePass[] = AUTOREM_PASS;
 
@@ -54,7 +54,7 @@ const int ntpInterval = 2000;
 const int secondInterval = 1000;
 
 const char* thinkSpeakAPIurl = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
-char arserver[] = "autoremotejoaomgcd.appspot.com";
+const char* arserver = "https://autoremotejoaomgcd.appspot.com";
 
 // Network Time Protocol
 const long utcOffsetInSeconds = 7200;
@@ -171,51 +171,69 @@ void handleOTA() {
 
 // Sending data to Thingspeak
 void thingSpeakRequest() {
-  String postStr = apiKey;
-  postStr +="&field1=";
-  postStr += String(temperature);
-  postStr +="&field2=";
-  postStr += String(humidity);
-  postStr +="&field3=";
-  postStr += String(analogValue);
-  postStr +="&field4=";
-  postStr += String(movement);
-  postStr += "\r\n\r\n";
+  client.stop();
+  if (client.connect(thinkSpeakAPIurl,80)) 
+  {
+    String postStr = apiKey;
+    postStr +="&field1=";
+    postStr += String(temperature);
+    postStr +="&field2=";
+    postStr += String(humidity);
+    postStr +="&field3=";
+    postStr += String(analogValue);
+    postStr +="&field4=";
+    postStr += String(movement);
+    postStr += "\r\n\r\n";
 
-  client.print("POST /update HTTP/1.1\n");
-  client.print("Host: api.thingspeak.com\n");
-  client.print("Connection: close\n");
-  client.print("X-THINGSPEAKAPIKEY: " + (String)apiKey + "\n");
-  client.print("Content-Type: application/x-www-form-urlencoded\n");
-  client.print("Content-Length: ");
-  client.print(postStr.length());
-  client.print("\n\n");
-  client.print(postStr);
+    client.print("POST /update HTTP/1.1\n");
+    client.print("Host: api.thingspeak.com\n");
+    client.print("Connection: close\n");
+    client.print("X-THINGSPEAKAPIKEY: " + (String)apiKey + "\n");
+    client.print("Content-Type: application/x-www-form-urlencoded\n");
+    client.print("Content-Length: ");
+    client.print(postStr.length());
+    client.print("\n\n");
+    client.print(postStr);
+    client.stop();
+    // Serial.println("Data uploaded to thingspeak!");
+  }
+  else {
+    Serial.println("ERROR: could not upload data to thingspeak!");
+  }
 }
 
 // Sending data to Thingspeak (fill beeHive data)
 void thingSpeakRequestBeeHive() {
-  char apiKeyBeehive[] = BEEHIVE_WR_APIKEY;
-  int weight = random(65, 76);
+  client.stop();
+  if (client.connect(thinkSpeakAPIurl,80)) 
+  {
+    char apiKeyBeehive[] = BEEHIVE_WR_APIKEY;
+    int weight = random(65, 76);
 
-  String postStr = apiKeyBeehive;
-  postStr +="&field1=";
-  postStr += String(temperature);
-  postStr +="&field2=";
-  postStr += String(humidity);
-  postStr +="&field3=";
-  postStr += String(weight);
-  postStr += "\r\n\r\n";
+    String postStr = apiKeyBeehive;
+    postStr +="&field1=";
+    postStr += String(temperature);
+    postStr +="&field2=";
+    postStr += String(humidity);
+    postStr +="&field3=";
+    postStr += String(weight);
+    postStr += "\r\n\r\n";
 
-  client.print("POST /update HTTP/1.1\n");
-  client.print("Host: api.thingspeak.com\n");
-  client.print("Connection: close\n");
-  client.print("X-THINGSPEAKAPIKEY: " + (String)apiKeyBeehive + "\n");
-  client.print("Content-Type: application/x-www-form-urlencoded\n");
-  client.print("Content-Length: ");
-  client.print(postStr.length());
-  client.print("\n\n");
-  client.print(postStr);
+    client.print("POST /update HTTP/1.1\n");
+    client.print("Host: api.thingspeak.com\n");
+    client.print("Connection: close\n");
+    client.print("X-THINGSPEAKAPIKEY: " + (String)apiKeyBeehive + "\n");
+    client.print("Content-Type: application/x-www-form-urlencoded\n");
+    client.print("Content-Length: ");
+    client.print(postStr.length());
+    client.print("\n\n");
+    client.print(postStr);
+    client.stop();
+    // Serial.println("Data uploaded to thingspeak!");
+  }
+  else {
+    Serial.println("ERROR: could not upload data to thingspeak (beehive)!");
+  }
 }
 
 // Handle HTML page calls
@@ -337,6 +355,7 @@ void loop(){
       Serial.print("WARNING: flame detected! (");
       Serial.print(analogValue);
       Serial.println(")");
+      sendToAutoRemote("WARNING: flame detected!", autoRemotePlus6, autoRemotePass);
       allowFlamePrint = false;
     }
     if ((analogValue < 768) && !allowFlamePrint) {
@@ -391,29 +410,15 @@ void loop(){
     digitalWrite(ESPLED, LOW);
     getSensorData();
 
-    if (client.connect(thinkSpeakAPIurl,80)) 
-    {
-      thingSpeakRequest();
-      client.stop();
-      // Serial.println("Data uploaded to thingspeak!");
-    }
-    else {
-      Serial.println("ERROR: could not upload data to thingspeak!");
-    }
+    // Upload data to thingSpeak
+    thingSpeakRequest();
 
     // Upload data to beehive
-    if (client.connect(thinkSpeakAPIurl,80)) 
-    {
-      thingSpeakRequestBeeHive();
-      client.stop();
-      // Serial.println("Data uploaded to thingspeak!");
-    }
-    else {
-      Serial.println("ERROR: could not upload data to thingspeak (beehive)!");
-    }
+    thingSpeakRequestBeeHive();\
+
+    sendToAutoRemote("TEST message from ESP!", autoRemotePlus6, autoRemotePass);
 
     serialPrintAll();
-    sendToAutoRemote("Data sent to thingSpeak", autoRemotePlus6, autoRemotePass);
     digitalWrite(ESPLED, HIGH);
   }
 
