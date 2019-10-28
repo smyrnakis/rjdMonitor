@@ -23,6 +23,8 @@ char defaultSSID[] = WIFI_DEFAULT_SSID;
 char defaultPASS[] = WIFI_DEFAULT_PASS;
 
 char apiKey[] = THINGSP_WR_APIKEY;
+char autoRemoteMac[] = AUTOREM_MAC;
+char autoRemotePlus6[] = AUTOREM_PLUS6;
 
 char otaAuthPin[] = OTA_AUTH_PIN;
 
@@ -51,6 +53,7 @@ const int ntpInterval = 2000;
 const int secondInterval = 1000;
 
 const char* thinkSpeakAPIurl = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
+char arserver[] = "autoremotejoaomgcd.appspot.com";
 
 // Network Time Protocol
 const long utcOffsetInSeconds = 7200;
@@ -117,16 +120,19 @@ void setup() {
 }
 
 // Send message to AutoRemote
-void sendToAutoRemote(char message[]){
+void sendToAutoRemote(char message[], char deviceKey[]){
   client.stop();
   if (client.connect(arserver, 80)) {
-    client.print("GET /sendmessage?key=YOUR_DEVICE_KEY&message=");
+    client.print("GET /sendmessage?key=");
+    client.print((String)deviceKey);
+    client.print("&message=");
     client.print(message);
     client.println(" HTTP/1.1");
     client.print("Host: ");
     client.println(arserver);
     client.println("User-Agent: Arduino");
     client.println();
+    client.stop();
   }
 }
 
@@ -404,6 +410,7 @@ void loop(){
     }
 
     serialPrintAll();
+    sendToAutoRemote("Data sent to thingSpeak", autoRemotePlus6);
     digitalWrite(ESPLED, HIGH);
   }
 
