@@ -116,7 +116,21 @@ void setup() {
   delay(400);
 }
 
+// Send message to AutoRemote
+void sendToAutoRemote(char message[]){
+  client.stop();
+  if (client.connect(arserver, 80)) {
+    client.print("GET /sendmessage?key=YOUR_DEVICE_KEY&message=");
+    client.print(message);
+    client.println(" HTTP/1.1");
+    client.print("Host: ");
+    client.println(arserver);
+    client.println("User-Agent: Arduino");
+    client.println();
+  }
+}
 
+// OTA code update
 void handleOTA() {
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
@@ -146,7 +160,6 @@ void handleOTA() {
   ArduinoOTA.begin();
 }
 
-
 // Sending data to Thingspeak
 void thingSpeakRequest() {
   String postStr = apiKey;
@@ -170,7 +183,6 @@ void thingSpeakRequest() {
   client.print("\n\n");
   client.print(postStr);
 }
-
 
 // Sending data to Thingspeak (fill beeHive data)
 void thingSpeakRequestBeeHive() {
