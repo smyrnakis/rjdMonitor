@@ -23,8 +23,9 @@ char defaultSSID[] = WIFI_DEFAULT_SSID;
 char defaultPASS[] = WIFI_DEFAULT_PASS;
 
 char apiKey[] = THINGSP_WR_APIKEY;
-char autoRemoteMac[] = AUTOREM_MAC;
+// char autoRemoteMac[] = AUTOREM_MAC;
 char autoRemotePlus6[] = AUTOREM_PLUS6;
+char autoRemotePass[] = AUTOREM_PASS;
 
 char otaAuthPin[] = OTA_AUTH_PIN;
 
@@ -120,13 +121,15 @@ void setup() {
 }
 
 // Send message to AutoRemote
-void sendToAutoRemote(char message[], char deviceKey[]){
+void sendToAutoRemote(char message[], char deviceKey[], char password[]) {
   client.stop();
   if (client.connect(arserver, 80)) {
     client.print("GET /sendmessage?key=");
     client.print((String)deviceKey);
     client.print("&message=");
     client.print(message);
+    client.print("&password=");
+    client.print((String)password);
     client.println(" HTTP/1.1");
     client.print("Host: ");
     client.println(arserver);
@@ -410,7 +413,7 @@ void loop(){
     }
 
     serialPrintAll();
-    sendToAutoRemote("Data sent to thingSpeak", autoRemotePlus6);
+    sendToAutoRemote("Data sent to thingSpeak", autoRemotePlus6, autoRemotePass);
     digitalWrite(ESPLED, HIGH);
   }
 
