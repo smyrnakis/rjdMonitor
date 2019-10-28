@@ -246,7 +246,7 @@ void handle_OnConnect() {
 }
 
 void handle_NotFound(){
-  server.send(404, "text/plain", "Not found");
+  server.send(404, "text/plain", "404 - Page not found");
 }
 
 // HTML page structure
