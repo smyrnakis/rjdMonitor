@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>
@@ -30,9 +31,8 @@ char autoRemotePass[] = AUTOREM_PASS;
 char otaAuthPin[] = OTA_AUTH_PIN;
 
 // ~~~~ Constants and variables
-//const int DHTPIN = D8; , uint8_t DHTPIN = D8;
-
 String httpHeader;
+String serverReply;
 String localIPaddress;
 String formatedTime;
 // short lastRecorderTemp;
@@ -54,10 +54,10 @@ const int ntpInterval = 2000;
 const int secondInterval = 1000;
 
 const char* thinkSpeakAPIurl = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
-const char* arserver = "https://autoremotejoaomgcd.appspot.com";
+const char* autoRemoteURL = "autoremotejoaomgcd.appspot.com";
 
 // Network Time Protocol
-const long utcOffsetInSeconds = 7200;
+const long utcOffsetInSeconds = 3600; // 1H (3600) for winter time / 2H (7200) for summer time
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 ESP8266WebServer server(80);
@@ -123,19 +123,37 @@ void setup() {
 // Send message to AutoRemote
 void sendToAutoRemote(char message[], char deviceKey[], char password[]) {
   client.stop();
-  if (client.connect(arserver, 80)) {
-    client.print("GET /sendmessage?key=");
-    client.print((String)deviceKey);
-    client.print("&message=");
-    client.print(message);
-    client.print("&password=");
-    client.print((String)password);
-    client.println(" HTTP/1.1");
-    client.print("Host: ");
-    client.println(arserver);
-    client.println("User-Agent: Arduino");
-    client.println();
+  if (client.connect(autoRemoteURL,80)) {
+    String url = "/sendmessage?key=";
+    url += (String)deviceKey;
+    url += "&message=";
+    url += (String)message;
+    url += "&password=";
+    url += (String)password;
+
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+               "Host: " + autoRemoteURL + "\r\n" +
+               "Connection: close\r\n\r\n");
+    // Timeout 5 sec
+    unsigned long timeout = millis();
+    while (client.available() == 0) {
+      if (millis() - timeout > 5000) {
+        client.stop();
+        Serial.println("ERROR: could not send message to AutoRemote!");
+        return;
+      }
+    }
+
+    while (client.available()) {
+        serverReply = client.readStringUntil('\r');
+    }
+      
+    serverReply.trim();
     client.stop();
+    // Serial.println("Data uploaded to thingspeak!");
+  }
+  else {
+    Serial.println("ERROR: could not send data to AutoRemote!");
   }
 }
 
@@ -355,7 +373,7 @@ void loop(){
       Serial.print("WARNING: flame detected! (");
       Serial.print(analogValue);
       Serial.println(")");
-      sendToAutoRemote("WARNING: flame detected!", autoRemotePlus6, autoRemotePass);
+      sendToAutoRemote("WARNING_flame-detected", autoRemotePlus6, autoRemotePass);
       allowFlamePrint = false;
     }
     if ((analogValue < 768) && !allowFlamePrint) {
@@ -415,8 +433,6 @@ void loop(){
 
     // Upload data to beehive
     thingSpeakRequestBeeHive();\
-
-    sendToAutoRemote("TEST message from ESP!", autoRemotePlus6, autoRemotePass);
 
     serialPrintAll();
     digitalWrite(ESPLED, HIGH);
