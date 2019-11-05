@@ -128,6 +128,8 @@ void sendToAutoRemote(char message[], char deviceKey[], char password[]) {
     url += (String)deviceKey;
     url += "&message=";
     url += (String)message;
+    url += "&sender=";
+    url += "SmyESP-1";
     url += "&password=";
     url += (String)password;
 
