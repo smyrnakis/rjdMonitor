@@ -319,6 +319,32 @@ void getSensorData() {
   // analogValue = map(analogValue, 0, 1024, 1024, 0);
 }
 
+// LED color for IR level
+void handlerLED() {
+  if ((analogValue >= 50) && (analogValue < 150)) {
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, LOW);
+  } else if ((analogValue >= 150) && (analogValue < 300))
+  {
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, HIGH);
+  } else if ((analogValue >= 300) && (analogValue < 512)) {
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, HIGH);
+    digitalWrite(RED_LED, HIGH);
+  } else if (analogValue >= 512) {
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, HIGH);
+  } else {
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, LOW);
+  }
+}
+
 // Get the time
 void pullNTPtime(bool printData) {
   timeClient.update();
@@ -353,12 +379,12 @@ void serialPrintAll() {
 
 
 void loop(){
-
   // Handle OTA firmware updates
   ArduinoOTA.handle();
 
   unsigned long currentMillis = millis();
 
+  // check IR level every 100ms
   if (currentMillis % 100 == 0) {
     analogValue = analogRead(ANLG_IN);
     analogValue = map(analogValue, 0, 1024, 1024, 0);
@@ -381,48 +407,22 @@ void loop(){
     }
   }
 
-  if ((analogValue >= 50) && (analogValue < 150)) {
-    digitalWrite(GREEN_LED, HIGH);
-    digitalWrite(BLUE_LED, LOW);
-    digitalWrite(RED_LED, LOW);
-  } else if ((analogValue >= 150) && (analogValue < 300))
-  {
-    digitalWrite(GREEN_LED, HIGH);
-    digitalWrite(BLUE_LED, LOW);
-    digitalWrite(RED_LED, HIGH);
-  } else if ((analogValue >= 300) && (analogValue < 512)) {
-    digitalWrite(GREEN_LED, LOW);
-    digitalWrite(BLUE_LED, HIGH);
-    digitalWrite(RED_LED, HIGH);
-  } else if (analogValue >= 512) {
-    digitalWrite(GREEN_LED, LOW);
-    digitalWrite(BLUE_LED, LOW);
-    digitalWrite(RED_LED, HIGH);
-  } else {
-    digitalWrite(GREEN_LED, LOW);
-    digitalWrite(BLUE_LED, LOW);
-    digitalWrite(RED_LED, LOW);
-  }
-  
+  handlerLED();
 
-
-  // if ((currentMillis % eepromSaveInterval == 0) && (allowEeprom)) {
-  //   Serial.println("Saving data in eeprom...");
-
-  //   allowEeprom = false;
-  // }
-
+  // pull the time
   if ((currentMillis % ntpInterval == 0) && (allowNtp)) {
     // Serial.println("Pulling NTP...");
     pullNTPtime(false);
     allowNtp = false;
   }
 
+  // pull sensor data
   if (currentMillis % sensorsInterval == 0) {
     // Serial.println("Reading sensor data...");
     getSensorData();
   }
 
+  // upload data to ThingSpeak
   if (currentMillis % uploadInterval == 0) {
     // Serial.println("Uploading to thingspeak...");
     digitalWrite(ESPLED, LOW);
@@ -438,12 +438,12 @@ void loop(){
     digitalWrite(ESPLED, HIGH);
   }
 
-  // Repeat every 1 second
+  // debounce per second
   if (currentMillis % secondInterval == 0) {
     // debounce for NTP calls
     allowNtp = true;
-    // allowEeprom = true;
   }
 
+  // handle HTTP connections
   server.handleClient();
 }
