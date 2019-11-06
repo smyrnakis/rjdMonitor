@@ -99,6 +99,7 @@ void setup() {
   Serial.println(localIPaddress);
 
   server.on("/", handle_OnConnect);
+  server.on("/about", handle_OnConnectAbout);
   server.onNotFound(handle_NotFound);
   
   server.begin();
@@ -260,8 +261,13 @@ void thingSpeakRequestBeeHive() {
 void handle_OnConnect() {
   digitalWrite(ESPLED, LOW);
   getSensorData();
-  // server.send(200, "text/html", SendHTML(temperature,humidity,formatedTime)); 
   server.send(200, "text/html", SendHTML());
+  digitalWrite(ESPLED, HIGH);
+}
+
+void handle_OnConnectAbout() {
+  digitalWrite(ESPLED, LOW);
+  server.send(200, "text/plain", "A smart home automation! (C) Apostolos Smyrnakis");
   digitalWrite(ESPLED, HIGH);
 }
 
