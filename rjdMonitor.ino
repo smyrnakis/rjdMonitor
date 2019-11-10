@@ -19,6 +19,9 @@
 #define BLUE_LED D3
 #define RED_LED D5 
 
+int redVal = 0;   // Variables to store the values to send to the pins
+int grnVal = 0;
+int bluVal = 0;
 
 char defaultSSID[] = WIFI_DEFAULT_SSID;
 char defaultPASS[] = WIFI_DEFAULT_PASS;
@@ -351,6 +354,35 @@ void handlerLED() {
     digitalWrite(BLUE_LED, LOW);
     digitalWrite(RED_LED, LOW);
   }
+
+  // if (analogValue < 341)  // Lowest third of the potentiometer's range (0-340)
+  // {                  
+  //   analogValue = (analogValue * 3) / 4; // Normalize to 0-255
+
+  //   redVal = 256 - analogValue;  // Red from full to off
+  //   grnVal = analogValue;        // Green from off to full
+  //   bluVal = 1;             // Blue off
+  // }
+  // else if (analogValue < 682) // Middle third of potentiometer's range (341-681)
+  // {
+  //   analogValue = ( (analogValue-341) * 3) / 4; // Normalize to 0-255
+
+  //   redVal = 1;            // Red off
+  //   grnVal = 256 - analogValue; // Green from full to off
+  //   bluVal = analogValue;       // Blue from off to full
+  // }
+  // else  // Upper third of potentiometer"s range (682-1023)
+  // {
+  //   analogValue = ( (analogValue-683) * 3) / 4; // Normalize to 0-255
+
+  //   redVal = analogValue;       // Red from off to full
+  //   grnVal = 1;            // Green off
+  //   bluVal = 256 - analogValue; // Blue from full to off
+  // }
+  // analogWrite(RED_LED, redVal);   // Write values to LED pins
+  // analogWrite(GREEN_LED, grnVal); 
+  // analogWrite(BLUE_LED, bluVal);  
+
 }
 
 // Get the time
@@ -393,7 +425,7 @@ void loop(){
   unsigned long currentMillis = millis();
 
   // check IR level every 100ms
-  if (currentMillis % 100 == 0) {
+  if (currentMillis % 10 == 0) {
     analogValue = analogRead(ANLG_IN);
     analogValue = map(analogValue, 0, 1024, 1024, 0);
 
