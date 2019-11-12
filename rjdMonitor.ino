@@ -401,7 +401,98 @@ void handlerLED() {
   // analogWrite(RED_LED, redVal);   // Write values to LED pins
   // analogWrite(GREEN_LED, grnVal); 
   // analogWrite(BLUE_LED, bluVal);  
+}
 
+void handlerLED_v2() {
+
+//  0     128     256     384     512     640     768     896     1024
+//  G              GB              B               BR               R
+//  G ++++++++++++++----------------
+//  B               ++++++++++++++++----------------
+//  R                                                 +++++++++++++++
+
+
+//  0     171     341     512     682     850     1024
+//  G ++++++--------
+//  B       ++++++++--------
+//  R               ++++++++-------
+
+
+
+  unsigned short greenVal;
+  unsigned short blueVal;
+  unsigned short redVal;
+
+  if ((analogValue >= 0) && (analogValue < 256)) {
+
+    greenVal = map(analogValue, 0, 256, 0, 255);
+    blueVal = 0;
+    redVal = 0;
+
+  } else if ((analogValue >= 256) && (analogValue < 512)) {
+
+    greenVal = map(analogValue, 256, 384, 255, 0);
+    blueVal = map(analogValue, 256, 512, 0, 255);
+    redVal = 0;
+
+  } else if ((analogValue >= 512) && (analogValue < 768)) {
+
+    greenVal = 0;
+    blueVal = map(analogValue, 512, 640, 255, 0);
+    redVal = map(analogValue, 512, 768, 0, 255);
+
+  } else if (analogValue >= 768) {
+
+    greenVal = 0;
+    blueVal = 0;
+    redVal = map(analogValue, 0, 256, 0, 255);
+
+  } else {
+
+    redVal = 0;
+    blueVal = 0;
+    greenVal = 0;
+  }
+
+  analogWrite(RED_LED, redVal);
+  analogWrite(GREEN_LED, greenVal); 
+  analogWrite(BLUE_LED, blueVal);
+
+  delay(5);
+
+  // digitalWrite(GREEN_LED, LOW);
+  // digitalWrite(BLUE_LED, LOW);
+  // digitalWrite(RED_LED, LOW);
+
+
+
+  // if (analogValue < 341)  // Lowest third of the potentiometer's range (0-340)
+  // {                  
+  //   analogValue = (analogValue * 3) / 4; // Normalize to 0-255
+
+  //   redVal = 256 - analogValue;  // Red from full to off
+  //   grnVal = analogValue;        // Green from off to full
+  //   bluVal = 1;             // Blue off
+  // }
+  // else if (analogValue < 682) // Middle third of potentiometer's range (341-681)
+  // {
+  //   analogValue = ( (analogValue-341) * 3) / 4; // Normalize to 0-255
+
+  //   redVal = 1;            // Red off
+  //   grnVal = 256 - analogValue; // Green from full to off
+  //   bluVal = analogValue;       // Blue from off to full
+  // }
+  // else  // Upper third of potentiometer"s range (682-1023)
+  // {
+  //   analogValue = ( (analogValue-683) * 3) / 4; // Normalize to 0-255
+
+  //   redVal = analogValue;       // Red from off to full
+  //   grnVal = 1;            // Green off
+  //   bluVal = 256 - analogValue; // Blue from full to off
+  // }
+  // analogWrite(RED_LED, redVal);   // Write values to LED pins
+  // analogWrite(GREEN_LED, grnVal); 
+  // analogWrite(BLUE_LED, bluVal);  
 }
 
 // Get the time
@@ -466,7 +557,8 @@ void loop(){
     }
   }
 
-  handlerLED();
+  // handlerLED();
+  handlerLED_v2();
 
   // pull the time
   if ((currentMillis % ntpInterval == 0) && (allowNtp)) {
