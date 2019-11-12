@@ -264,7 +264,7 @@ void thingSpeakRequestBeeHive() {
 void handle_OnConnect() {
   digitalWrite(ESPLED, LOW);
   getSensorData();
-  server.send(200, "text/html", SendHTML());
+  server.send(200, "text/html", HTMLpresentData());
   digitalWrite(ESPLED, HIGH);
 }
 
@@ -278,8 +278,8 @@ void handle_NotFound(){
   server.send(404, "text/plain", "404 - Page not found");
 }
 
-// HTML page structure
-String SendHTML(){
+// HTML pages structure
+String HTMLpresentData(){
   String ptr = "<!DOCTYPE html> <html>\n";
   ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
   ptr +="<title>RJD Monitor</title>\n";
