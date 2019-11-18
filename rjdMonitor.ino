@@ -82,9 +82,12 @@ void setup() {
   
   digitalWrite(PCBLED, HIGH);
   digitalWrite(ESPLED, HIGH);
-  digitalWrite(GREEN_LED, LOW);
-  digitalWrite(BLUE_LED, LOW);
-  digitalWrite(RED_LED, LOW);
+  analogWrite(GREEN_LED, 0);
+  analogWrite(BLUE_LED, 0);
+  analogWrite(RED_LED, 0);
+  // digitalWrite(GREEN_LED, LOW);
+  // digitalWrite(BLUE_LED, LOW);
+  // digitalWrite(RED_LED, LOW);
 
   randomSeed(analogRead(0));
 
@@ -281,6 +284,7 @@ void handle_NotFound(){
 // HTML pages structure
 String HTMLpresentData(){
   String ptr = "<!DOCTYPE html> <html>\n";
+  ptr +="<meta http-equiv=\"refresh\" content=\"5\" >\n";
   ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
   ptr +="<title>RJD Monitor</title>\n";
   ptr +="<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
@@ -417,48 +421,122 @@ void handlerLED_v2() {
 //  B       ++++++++--------
 //  R               ++++++++-------
 
+// +++++++
+// ********
+// -------
 
+//     0    170     341    510    682     854 1024
+//                  300    480    610    810
+// G   +++++++********-------
+// B                 +++++++********-------
+// R                              +++++++*******
+
+//  Green 0 - 170-341 - 510
+//  Blue  300 - 480-682 - 854
+//  Red   610 - 810-1024  
 
   unsigned short greenVal;
   unsigned short blueVal;
   unsigned short redVal;
 
-  if ((analogValue >= 0) && (analogValue < 256)) {
-
-    greenVal = map(analogValue, 0, 256, 0, 255);
-    blueVal = 0;
-    redVal = 0;
-
-  } else if ((analogValue >= 256) && (analogValue < 512)) {
-
-    greenVal = map(analogValue, 256, 384, 255, 0);
-    blueVal = map(analogValue, 256, 512, 0, 255);
-    redVal = 0;
-
-  } else if ((analogValue >= 512) && (analogValue < 768)) {
-
-    greenVal = 0;
-    blueVal = map(analogValue, 512, 640, 255, 0);
-    redVal = map(analogValue, 512, 768, 0, 255);
-
-  } else if (analogValue >= 768) {
-
+  if (analogValue = 0) {
     greenVal = 0;
     blueVal = 0;
-    redVal = map(analogValue, 0, 256, 0, 255);
-
+    redVal = 0;
   } else {
 
-    redVal = 0;
-    blueVal = 0;
-    greenVal = 0;
+    // GREEN LED
+    if (analogValue <= 170) {
+      greenVal = map(analogValue, 0, 170, 0, 255);
+    }
+    if ((analogValue > 170) && (analogValue <= 341)) {
+      greenVal = 255;
+    }
+    if (analogValue > 341) {
+      greenVal = map(analogValue, 341, 510, 255, 0);
+    }
+    // Turn GREEN off
+    if (analogValue > 510) {
+      greenVal = 0;
+    }
+
+    // BLUE LED
+    if ((analogValue >= 300) && (analogValue <= 480)) {
+      blueVal = map(analogValue, 300, 480, 0, 255);
+    }
+    if ((analogValue > 480) && (analogValue <= 682)) {
+      blueVal = 255;
+    }
+    if (analogValue > 682) {
+      blueVal = map(analogValue, 682, 880, 255, 0);   // 880 --> 854
+    }
+    // Turn BLUE off
+    if ((analogValue < 300) && (analogValue > 880)) { // 880 --> 854
+      blueVal = 0;
+    }
+    
+    // RED LED
+    if ((analogValue >= 610) && (analogValue <= 840)) { // 840 --> 810
+      redVal = map(analogValue, 610, 840, 0, 255);      // 840 --> 810
+    }
+    if ((analogValue > 480) && (analogValue <= 682)) {
+      redVal = 255;
+    }
+    if (analogValue > 840) {
+      redVal = 255;                                     // 840 --> 810
+    }
+    // Turn RED off
+    if (analogValue < 610) {
+      redVal = 0;
+    }
+
+
   }
+
+
+  // if (analogValue > 510) {
+  //   greenVal = 0;
+  // }
+  // if ((analogValue < 300) && (analogValue > 854)) {
+  //   blueVal = 0;
+  // }
+  // if (analogValue < 610) {
+  //   redVal = 0;
+  // }
+
+
+
+
+  // if ((analogValue >= 0) && (analogValue < 170)) {
+
+
+  // } else if ((analogValue >= 256) && (analogValue < 512)) {
+
+
+  // } else if ((analogValue >= 512) && (analogValue < 768)) {
+
+  //   greenVal = 0;
+  //   blueVal = map(analogValue, 512, 640, 255, 0);
+  //   redVal = map(analogValue, 512, 768, 0, 255);
+
+  // } else if (analogValue >= 768) {
+
+  //   greenVal = 0;
+  //   blueVal = 0;
+  //   redVal = map(analogValue, 0, 256, 0, 255);
+
+  // } else {
+
+  //   redVal = 0;
+  //   blueVal = 0;
+  //   greenVal = 0;
+  // }
 
   analogWrite(RED_LED, redVal);
   analogWrite(GREEN_LED, greenVal); 
   analogWrite(BLUE_LED, blueVal);
 
-  delay(5);
+  // delay(5);
 
   // digitalWrite(GREEN_LED, LOW);
   // digitalWrite(BLUE_LED, LOW);
@@ -493,6 +571,40 @@ void handlerLED_v2() {
   // analogWrite(RED_LED, redVal);   // Write values to LED pins
   // analogWrite(GREEN_LED, grnVal); 
   // analogWrite(BLUE_LED, bluVal);  
+}
+
+void handlerLED_v3 () {
+
+  unsigned int greenVal;
+  unsigned int blueVal;
+  unsigned int redVal;
+
+  if (analogValue = 0) {
+    greenVal = 0;
+    blueVal = 0;
+    redVal = 0;
+  }
+  else {
+    if (analogValue <= 350) {
+      redVal = 0;
+      blueVal = 0;
+      greenVal = map(analogValue, 0, 350, 0, 255);
+    }
+    else if (analogValue <= 700) {
+      redVal = 0;
+      greenVal = 0;
+      blueVal = map(analogValue, 351, 700, 0, 255);
+    }
+    else {
+      greenVal = 0;
+      blueVal = 0;
+      redVal = map(analogValue, 701, 1024, 0, 255);
+    }
+  }
+
+  analogWrite(RED_LED, redVal);
+  analogWrite(GREEN_LED, greenVal); 
+  analogWrite(BLUE_LED, blueVal);
 }
 
 // Get the time
@@ -555,10 +667,13 @@ void loop(){
     if ((analogValue < 768) && !allowFlamePrint) {
       allowFlamePrint = true;
     }
+    // handlerLED_v2();
+    // handlerLED_v3();
   }
 
-  // handlerLED();
-  handlerLED_v2();
+  handlerLED();
+  // handlerLED_v2();
+  // handlerLED_v3();
 
   // pull the time
   if ((currentMillis % ntpInterval == 0) && (allowNtp)) {
