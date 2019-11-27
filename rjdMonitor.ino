@@ -208,8 +208,8 @@ void thingSpeakRequest() {
     postStr += String(humidity);
     postStr +="&field3=";
     postStr += String(analogValue);
-    postStr +="&field4=";
-    postStr += String(movement);
+    // postStr +="&field4=";
+    // postStr += String(movement);
     postStr += "\r\n\r\n";
 
     client.print("POST /update HTTP/1.1\n");
@@ -235,15 +235,16 @@ void thingSpeakRequestBeeHive() {
   if (client.connect(thinkSpeakAPIurl,80)) 
   {
     char apiKeyBeehive[] = BEEHIVE_WR_APIKEY;
-    int weight = random(65, 76);
+    //int weight = random(65, 76);
 
     String postStr = apiKeyBeehive;
-    postStr +="&field1=";
+    postStr += "&field1=";
     postStr += String(temperature);
-    postStr +="&field2=";
+    postStr += "&field2=";
     postStr += String(humidity);
-    postStr +="&field3=";
-    postStr += String(weight);
+    postStr += "&field3=";
+    // postStr += String(weight);
+    postStr += "0";
     postStr += "\r\n\r\n";
 
     client.print("POST /update HTTP/1.1\n");
