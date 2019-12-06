@@ -48,7 +48,7 @@ bool allowNtp = true;
 bool allowFlamePrint = true;
 // bool allowEeprom = true;
 
-unsigned long previousMillis = 0;
+unsigned long flameMillis = 0;
 
 const int eepromSaveInterval = 60000;
 const int uploadInterval = 15000;
@@ -172,7 +172,7 @@ void handleOTA() {
   // ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname("SmyESP-1");
+  ArduinoOTA.setHostname("SmyESP-1.local");
 
   ArduinoOTA.setPassword((const char *)otaAuthPin);
 
@@ -651,25 +651,24 @@ void loop(){
   if (currentMillis % 10 == 0) {
     analogValue = analogRead(ANLG_IN);
     analogValue = map(analogValue, 0, 1024, 1024, 0);
+  }
 
-    if (analogValue > 768) {
-      digitalWrite(PCBLED, LOW);
-    }
-    else {
-      digitalWrite(PCBLED, HIGH);
-    }
-    if ((analogValue > 768) && allowFlamePrint) {
-      Serial.print("WARNING: flame detected! (");
-      Serial.print(analogValue);
-      Serial.println(")");
-      sendToAutoRemote("WARNING_flame-detected", autoRemotePlus6, autoRemotePass);
-      allowFlamePrint = false;
-    }
-    if ((analogValue < 768) && !allowFlamePrint) {
-      allowFlamePrint = true;
-    }
-    // handlerLED_v2();
-    // handlerLED_v3();
+  if (analogValue > 768) {
+    digitalWrite(PCBLED, LOW);
+  }
+  else {
+    digitalWrite(PCBLED, HIGH);
+  }
+  if ((analogValue > 768) && allowFlamePrint) {
+    Serial.print("WARNING: flame detected! (");
+    Serial.print(analogValue);
+    Serial.println(")");
+    sendToAutoRemote("WARNING_flame-detected", autoRemotePlus6, autoRemotePass);
+    allowFlamePrint = false;
+    flameMillis = millis();
+  }
+  if ((analogValue < 768) && !allowFlamePrint && (currentMillis >= flameMillis+60000)) {
+    allowFlamePrint = true;
   }
 
   handlerLED();
