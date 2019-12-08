@@ -82,17 +82,15 @@ void setup() {
   pinMode(GREEN_LED, OUTPUT);
   pinMode(BLUE_LED, OUTPUT);
   pinMode(RED_LED, OUTPUT);
-  
+
   digitalWrite(PCBLED, HIGH);
   digitalWrite(ESPLED, HIGH);
-  analogWrite(GREEN_LED, 0);
-  analogWrite(BLUE_LED, 0);
-  analogWrite(RED_LED, 0);
-  // digitalWrite(GREEN_LED, LOW);
-  // digitalWrite(BLUE_LED, LOW);
-  // digitalWrite(RED_LED, LOW);
-
-  randomSeed(analogRead(0));
+  // analogWrite(GREEN_LED, 0);
+  // analogWrite(BLUE_LED, 0);
+  // analogWrite(RED_LED, 0);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(BLUE_LED, LOW);
+  digitalWrite(RED_LED, LOW);
 
   Serial.begin(115200);
   delay(100);
@@ -212,7 +210,7 @@ void thingSpeakRequest() {
     postStr +="&field3=";
     postStr += String(analogValue);
     postStr +="&field4=";
-    postStr += String(movement);
+    postStr += String(tempMove);
     postStr += "\r\n\r\n";
 
     client.print("POST /update HTTP/1.1\n");
@@ -648,7 +646,7 @@ void serialPrintAll() {
 }
 
 
-void loop(){
+void loop() {
   // Handle OTA firmware updates
   ArduinoOTA.handle();
 
