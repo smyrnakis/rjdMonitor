@@ -666,13 +666,9 @@ void loop(){
     lastMovementTime = formatedTime;
   }
 
-  if (analogValue > 768) {
-    digitalWrite(PCBLED, LOW);
-  }
-  else {
-    digitalWrite(PCBLED, HIGH);
-  }
-  if ((analogValue > 768) && allowFlamePrint) {
+  (movement) ? digitalWrite(PCBLED, LOW) : digitalWrite(PCBLED, HIGH);
+
+  if ((analogValue > 850) && allowFlamePrint) {
     Serial.print("WARNING: flame detected! (");
     Serial.print(analogValue);
     Serial.println(")");
@@ -680,7 +676,7 @@ void loop(){
     allowFlamePrint = false;
     flameMillis = millis();
   }
-  if ((analogValue < 768) && !allowFlamePrint && (currentMillis >= flameMillis+60000)) {
+  if ((analogValue < 850) && !allowFlamePrint && (currentMillis >= flameMillis+60000)) {
     allowFlamePrint = true;
   }
 
