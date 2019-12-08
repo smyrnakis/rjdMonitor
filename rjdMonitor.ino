@@ -39,12 +39,13 @@ String httpHeader;
 String serverReply;
 String localIPaddress;
 String formatedTime;
-// short lastRecorderTemp;
+String lastMovementTime;
 
 float temperature;
 float humidity;
 int analogValue = 0;
 bool movement = false;
+bool tempMove = false;
 bool allowNtp = true;
 bool allowFlamePrint = true;
 // bool allowEeprom = true;
@@ -126,7 +127,7 @@ void setup() {
   // handle OTA updates
   handleOTA();
 
-  delay(400);
+  delay(5000);
 }
 
 // Send message to AutoRemote
@@ -299,29 +300,29 @@ String HTMLpresentData(){
   ptr +="<div id=\"webpage\">\n";
   ptr +="<h1>RJD Monitor</h1>\n";
   
-  ptr +="<p>Local IP: ";
+  ptr +="<p><b>Local IP:</b> ";
   ptr += (String)localIPaddress;
   ptr +="</p>";
-
-  ptr +="<p>Temperature: ";
-  ptr +=(String)temperature;
-  ptr +="&#176C</p>"; // '°' is '&#176' in HTML
-  ptr +="<p>Humidity: ";
-  ptr +=(String)humidity;
-  ptr +="%</p>";
-  ptr +="<p>IR sensor: ";
-  ptr +=(String)analogValue;
-  ptr +=" [0-1024]</p>";
-  ptr += "<p>Movement: ";
-  ptr +=(String)movement;
-  ptr += " [0/1]</p>";
-  ptr += "<p>Timestamp: ";
+  ptr += "<p><b>Timestamp:</b> ";
   ptr +=(String)formatedTime;
   ptr += "</p>";
 
-  // ptr +="<p>Last recorder temp: ";
-  // ptr +=(String)lastRecorderTemp;
-  // ptr +="&#176C</p>";
+  ptr +="<p><b>Temperature:</b> ";
+  ptr +=(String)temperature;
+  ptr +="&#176C</p>"; // '°' is '&#176' in HTML
+  ptr +="<p><b>Humidity:</b> ";
+  ptr +=(String)humidity;
+  ptr +="%</p>";
+  ptr +="<p><b>IR sensor:</b> ";
+  ptr +=(String)analogValue;
+  ptr +=" [0-1024]</p>";
+  ptr += "<p><b>Movement:</b> ";
+  // ptr +=(String)movement;
+  ptr +=(String)tempMove;
+  ptr += " [0/1]</p>";
+  ptr += "<p><b>Last movement:</b> ";
+  ptr +=(String)lastMovementTime;
+  ptr += "</p>";
   
   ptr +="</div>\n";
   ptr +="</body>\n";
@@ -660,6 +661,11 @@ void loop(){
     movement = digitalRead(PIRIN);
   }
 
+  if (movement) {
+    tempMove = true;
+    lastMovementTime = formatedTime;
+  }
+
   if (analogValue > 768) {
     digitalWrite(PCBLED, LOW);
   }
@@ -690,29 +696,26 @@ void loop(){
 
   // pull sensor data
   if (currentMillis % sensorsInterval == 0) {
-    // Serial.println("Reading sensor data...");
     getSensorData();
   }
 
   // upload data to ThingSpeak
   if (currentMillis % uploadInterval == 0) {
-    // Serial.println("Uploading to thingspeak...");
     digitalWrite(ESPLED, LOW);
     getSensorData();
 
     // Upload data to thingSpeak
     thingSpeakRequest();
-
     // Upload data to beehive
-    thingSpeakRequestBeeHive();\
+    thingSpeakRequestBeeHive();
 
     serialPrintAll();
+    tempMove = false;
     digitalWrite(ESPLED, HIGH);
   }
 
   // debounce per second
   if (currentMillis % secondInterval == 0) {
-    // debounce for NTP calls
     allowNtp = true;
   }
 
