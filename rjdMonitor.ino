@@ -11,8 +11,9 @@
 #include "secrets.h"
 
 #define DHTTYPE DHT11
-#define PCBLED D0 // 16 , LED_BUILTIN
 #define DHTPIN D1
+#define PIRIN D6
+#define PCBLED D0 // 16 , LED_BUILTIN
 #define ESPLED D4 // 2
 #define ANLG_IN A0
 #define GREEN_LED D2
@@ -43,7 +44,7 @@ String formatedTime;
 float temperature;
 float humidity;
 int analogValue = 0;
-bool movement;
+bool movement = false;
 bool allowNtp = true;
 bool allowFlamePrint = true;
 // bool allowEeprom = true;
@@ -74,6 +75,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
   pinMode(DHTPIN, INPUT);
+  pinMode(PIRIN, INPUT);
   pinMode(PCBLED, OUTPUT);
   pinMode(ESPLED, OUTPUT);
   pinMode(GREEN_LED, OUTPUT);
@@ -172,7 +174,7 @@ void handleOTA() {
   // ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname("SmyESP-1.local");
+  ArduinoOTA.setHostname("SmyESP-1");
 
   ArduinoOTA.setPassword((const char *)otaAuthPin);
 
@@ -208,8 +210,8 @@ void thingSpeakRequest() {
     postStr += String(humidity);
     postStr +="&field3=";
     postStr += String(analogValue);
-    // postStr +="&field4=";
-    // postStr += String(movement);
+    postStr +="&field4=";
+    postStr += String(movement);
     postStr += "\r\n\r\n";
 
     client.print("POST /update HTTP/1.1\n");
@@ -309,7 +311,10 @@ String HTMLpresentData(){
   ptr +="%</p>";
   ptr +="<p>IR sensor: ";
   ptr +=(String)analogValue;
-  ptr +="%</p>";
+  ptr +=" [0-1024]</p>";
+  ptr += "<p>Movement: ";
+  ptr +=(String)movement;
+  ptr += " [0/1]</p>";
   ptr += "<p>Timestamp: ";
   ptr +=(String)formatedTime;
   ptr += "</p>";
@@ -345,11 +350,9 @@ String HTMLnotFound(){
 
 // Read all sensors
 void getSensorData() {
-  //temperature  = random(10, 21);
-  //humidity  = random(65, 85);
-  movement = random(0, 2);
   temperature = dht.readTemperature();
   humidity = dht.readHumidity();
+  // movement = digitalRead(PIRIN);
   // analogValue = analogRead(ANLG_IN);
   // analogValue = map(analogValue, 0, 1024, 1024, 0);
 }
@@ -410,31 +413,31 @@ void handlerLED() {
 
 void handlerLED_v2() {
 
-//  0     128     256     384     512     640     768     896     1024
-//  G              GB              B               BR               R
-//  G ++++++++++++++----------------
-//  B               ++++++++++++++++----------------
-//  R                                                 +++++++++++++++
+  //  0     128     256     384     512     640     768     896     1024
+  //  G              GB              B               BR               R
+  //  G ++++++++++++++----------------
+  //  B               ++++++++++++++++----------------
+  //  R                                                 +++++++++++++++
 
 
-//  0     171     341     512     682     850     1024
-//  G ++++++--------
-//  B       ++++++++--------
-//  R               ++++++++-------
+  //  0     171     341     512     682     850     1024
+  //  G ++++++--------
+  //  B       ++++++++--------
+  //  R               ++++++++-------
 
-// +++++++
-// ********
-// -------
+  // +++++++
+  // ********
+  // -------
 
-//     0    170     341    510    682     854 1024
-//                  300    480    610    810
-// G   +++++++********-------
-// B                 +++++++********-------
-// R                              +++++++*******
+  //     0    170     341    510    682     854 1024
+  //                  300    480    610    810
+  // G   +++++++********-------
+  // B                 +++++++********-------
+  // R                              +++++++*******
 
-//  Green 0 - 170-341 - 510
-//  Blue  300 - 480-682 - 854
-//  Red   610 - 810-1024  
+  //  Green 0 - 170-341 - 510
+  //  Blue  300 - 480-682 - 854
+  //  Red   610 - 810-1024  
 
   unsigned short greenVal;
   unsigned short blueVal;
@@ -637,6 +640,9 @@ void serialPrintAll() {
   Serial.print("IR value: ");
   Serial.print(String(analogValue));
   Serial.println(" [0-1024]");
+  Serial.print("Movement: ");
+  Serial.print(String(movement));
+  Serial.println(" [0/1]");
   Serial.println();
 }
 
@@ -648,9 +654,10 @@ void loop(){
   unsigned long currentMillis = millis();
 
   // check IR level every 100ms
-  if (currentMillis % 10 == 0) {
+  if (currentMillis % 100 == 0) {
     analogValue = analogRead(ANLG_IN);
     analogValue = map(analogValue, 0, 1024, 1024, 0);
+    movement = digitalRead(PIRIN);
   }
 
   if (analogValue > 768) {
@@ -677,7 +684,6 @@ void loop(){
 
   // pull the time
   if ((currentMillis % ntpInterval == 0) && (allowNtp)) {
-    // Serial.println("Pulling NTP...");
     pullNTPtime(false);
     allowNtp = false;
   }
