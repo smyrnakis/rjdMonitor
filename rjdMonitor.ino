@@ -31,6 +31,7 @@ char apiKey[] = THINGSP_WR_APIKEY;
 char autoRemoteMac[] = AUTOREM_MAC;
 char autoRemotePlus6[] = AUTOREM_PLUS6;
 char autoRemotePass[] = AUTOREM_PASS;
+char autoRemoteTTL[] = "15";
 
 char otaAuthPin[] = OTA_AUTH_PIN;
 
@@ -140,6 +141,8 @@ void sendToAutoRemote(char message[], char deviceKey[], char password[]) {
     url += "SmyESP-1";
     url += "&password=";
     url += (String)password;
+    url += "&ttl=";
+    url += (String)autoRemoteTTL;
 
     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                "Host: " + autoRemoteURL + "\r\n" +
