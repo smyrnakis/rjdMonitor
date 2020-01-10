@@ -40,6 +40,8 @@ String httpHeader;
 String serverReply;
 String localIPaddress;
 String formatedTime;
+String dayToday;
+String lastMovementDay;
 String lastMovementTime;
 
 float temperature;
@@ -305,24 +307,26 @@ String HTMLpresentData(){
   ptr += (String)localIPaddress;
   ptr +="</p>";
   ptr += "<p><b>Timestamp:</b> ";
-  ptr +=(String)formatedTime;
+  ptr += (String)formatedTime;
   ptr += "</p>";
 
   ptr +="<p><b>Temperature:</b> ";
-  ptr +=(String)temperature;
+  ptr += (String)temperature;
   ptr +="&#176C</p>"; // '°' is '&#176' in HTML
   ptr +="<p><b>Humidity:</b> ";
-  ptr +=(String)humidity;
+  ptr += (String)humidity;
   ptr +="%</p>";
   ptr +="<p><b>IR sensor:</b> ";
-  ptr +=(String)analogValue;
+  ptr += (String)analogValue;
   ptr +=" [0-1024]</p>";
   ptr += "<p><b>Movement:</b> ";
-  // ptr +=(String)movement;
-  ptr +=(String)tempMove;
+  // ptr += (String)movement;
+  ptr += (String)tempMove;
   ptr += " [0/1]</p>";
   ptr += "<p><b>Last movement:</b> ";
-  ptr +=(String)lastMovementTime;
+  ptr += (String)lastMovementDay;
+  ptr += ", ";
+  ptr += (String)lastMovementTime;
   ptr += "</p>";
   
   ptr +="</div>\n";
@@ -617,6 +621,7 @@ void handlerLED_v3 () {
 void pullNTPtime(bool printData) {
   timeClient.update();
   formatedTime = timeClient.getFormattedTime();
+  dayToday = daysOfTheWeek[timeClient.getDay()];
 
   if (printData) {
     // Serial.print(daysOfTheWeek[timeClient.getDay()]);
@@ -632,7 +637,12 @@ void pullNTPtime(bool printData) {
 
 // Serial print data
 void serialPrintAll() {
-  Serial.println(timeClient.getFormattedTime());
+  String tempDayTime;
+  tempDayTime = dayToday;
+  tempDayTime += ", ";
+  tempDayTime += formatedTime;
+  Serial.print(String(tempDayTime));
+  // Serial.println(timeClient.getFormattedTime());
   Serial.print("Temperature: ");
   Serial.print(String(temperature));
   Serial.println("°C");
@@ -665,6 +675,7 @@ void loop() {
   if (movement) {
     tempMove = true;
     lastMovementTime = formatedTime;
+    lastMovementDay = dayToday;
   }
 
   (movement) ? digitalWrite(PCBLED, LOW) : digitalWrite(PCBLED, HIGH);
