@@ -715,7 +715,7 @@ void loop() {
     // Upload data to thingSpeak
     thingSpeakRequest();
     // Upload data to beehive
-    thingSpeakRequestBeeHive();
+    // thingSpeakRequestBeeHive();
 
     serialPrintAll();
     tempMove = false;
