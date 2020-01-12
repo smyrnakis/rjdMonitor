@@ -50,12 +50,11 @@ int analogValue = 0;
 bool movement = false;
 bool tempMove = false;
 bool allowNtp = true;
+bool allowLEDs = true;
 bool allowFlamePrint = true;
-// bool allowEeprom = true;
 
 unsigned long flameMillis = 0;
 
-const int eepromSaveInterval = 60000;
 const int uploadInterval = 15000;
 const int sensorsInterval = 6000;
 const int ntpInterval = 2000;
@@ -110,6 +109,8 @@ void setup() {
 
   server.on("/", handle_OnConnect);
   server.on("/about", handle_OnConnectAbout);
+  server.on("/LEDon", handle_OnConnectLEDon);
+  server.on("/LEDoff", handle_OnConnectLEDoff);
   server.onNotFound(handle_NotFound);
   
   server.begin();
@@ -278,6 +279,24 @@ void handle_OnConnect() {
   digitalWrite(ESPLED, HIGH);
 }
 
+void handle_OnConnectLEDon() {
+  digitalWrite(ESPLED, LOW);
+  allowLEDs = true;
+  server.send(200, "text/plain", "LEDs allowed");
+  delay(500);
+  refreshToRoot();
+  digitalWrite(ESPLED, HIGH);
+}
+
+void handle_OnConnectLEDoff() {
+  digitalWrite(ESPLED, LOW);
+  allowLEDs = false;
+  server.send(200, "text/plain", "LEDs disallowed");
+  delay(500);
+  refreshToRoot();
+  digitalWrite(ESPLED, HIGH);
+}
+
 void handle_OnConnectAbout() {
   digitalWrite(ESPLED, LOW);
   server.send(200, "text/plain", "A smart home automation! (C) Apostolos Smyrnakis");
@@ -286,6 +305,13 @@ void handle_OnConnectAbout() {
 
 void handle_NotFound(){
   server.send(404, "text/html", HTMLnotFound());
+}
+
+void refreshToRoot() {
+  String rfr = "<head>";
+  rfr += "<meta http-equiv=\"refresh\" content=\"0;url=/\">\n";
+  rfr += "</head>";
+  server.send(200, "text/html", rfr);
 }
 
 // HTML pages structure
@@ -297,6 +323,8 @@ String HTMLpresentData(){
   ptr +="<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
   ptr +="body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
   ptr +="p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+  ptr +=".button { background-color: #195B6A; border: none; color: white; padding: 16px 50px;\n";
+  ptr += ".button2 {background-color: #77878A;}\n";
   ptr +="</style>\n";
   ptr +="</head>\n";
   ptr +="<body>\n";
@@ -328,6 +356,16 @@ String HTMLpresentData(){
   ptr += ", ";
   ptr += (String)lastMovementTime;
   ptr += "</p>";
+  ptr +="<p><b>Allow LEDs:</b> ";
+  ptr += (String)allowLEDs;
+  ptr +="</p>";
+  ptr +="<p></p>";
+
+  if (allowLEDs) {
+    ptr += "<th colspan=\"2\"><p><a href=\"/LEDoff\"><button class=\"button\">LEDs allowed</button></a></p></th>";
+  } else {
+    ptr += "<th colspan=\"2>\"<p><a href=\"/LEDon\"><button class=\"button button2\">No LEDs</button></a></p></th>";
+  }
   
   ptr +="</div>\n";
   ptr +="</body>\n";
@@ -353,6 +391,7 @@ String HTMLnotFound(){
   ptr +="</html>\n";
   return ptr;
 }
+
 
 // Read all sensors
 void getSensorData() {
