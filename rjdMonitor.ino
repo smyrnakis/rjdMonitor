@@ -282,18 +282,22 @@ void handle_OnConnect() {
 void handle_OnConnectLEDon() {
   digitalWrite(ESPLED, LOW);
   allowLEDs = true;
-  server.send(200, "text/plain", "LEDs allowed");
-  delay(500);
-  refreshToRoot();
+  server.send(200, "text/html", HTMLledsConfig());
+  // server.send(200, "text/plain", "LEDs allowed");
+  delay(1000);
+  handle_OnConnect();
+  // refreshToRoot();
   digitalWrite(ESPLED, HIGH);
 }
 
 void handle_OnConnectLEDoff() {
   digitalWrite(ESPLED, LOW);
   allowLEDs = false;
-  server.send(200, "text/plain", "LEDs disallowed");
-  delay(500);
-  refreshToRoot();
+  server.send(200, "text/html", HTMLledsConfig());
+  // server.send(200, "text/plain", "LEDs disallowed");
+  delay(1000);
+  handle_OnConnect();
+  // refreshToRoot();
   digitalWrite(ESPLED, HIGH);
 }
 
@@ -317,78 +321,104 @@ void refreshToRoot() {
 // HTML pages structure
 String HTMLpresentData(){
   String ptr = "<!DOCTYPE html> <html>\n";
-  ptr +="<meta http-equiv=\"refresh\" content=\"5\" >\n";
-  ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-  ptr +="<title>RJD Monitor</title>\n";
-  ptr +="<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
-  ptr +="body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
-  ptr +="p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
-  ptr +=".button { background-color: #195B6A; border: none; color: white; padding: 16px 50px;\n";
-  ptr += ".button2 {background-color: #77878A;}\n";
-  ptr +="</style>\n";
-  ptr +="</head>\n";
-  ptr +="<body>\n";
-  ptr +="<div id=\"webpage\">\n";
-  ptr +="<h1>RJD Monitor</h1>\n";
+  ptr += "<meta http-equiv=\"refresh\" content=\"5\" >\n";
+  ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
+  ptr += "<title>RJD Monitor</title>\n";
+  ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
+  ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
+  ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+  ptr += ".button { background-color: #195B6A; border: none; color: white; padding: 16px 50px;\n";
+  ptr += "text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}\n";
+  ptr += ".button2 { background-color: #77878A;}\n";
+  ptr += "</style>\n";
+  ptr += "</head>\n";
+  ptr += "<body>\n";
+  ptr += "<div id=\"webpage\">\n";
+  ptr += "<h1>RJD Monitor</h1>\n";
   
-  ptr +="<p><b>Local IP:</b> ";
+  ptr += "<p><b>Local IP:</b> ";
   ptr += (String)localIPaddress;
-  ptr +="</p>";
+  ptr += "</p>";
   ptr += "<p><b>Timestamp:</b> ";
   ptr += (String)formatedTime;
   ptr += "</p>";
 
-  ptr +="<p><b>Temperature:</b> ";
+  ptr += "<p><b>Temperature:</b> ";
   ptr += (String)temperature;
-  ptr +="&#176C</p>"; // '°' is '&#176' in HTML
-  ptr +="<p><b>Humidity:</b> ";
+  ptr += "&#176C</p>"; // '°' is '&#176' in HTML
+  ptr += "<p><b>Humidity:</b> ";
   ptr += (String)humidity;
-  ptr +="%</p>";
-  ptr +="<p><b>IR sensor:</b> ";
+  ptr += "%</p>";
+  ptr += "<p><b>IR sensor:</b> ";
   ptr += (String)analogValue;
-  ptr +=" [0-1024]</p>";
+  ptr += " [0-1024]</p>";
   ptr += "<p><b>Movement:</b> ";
   // ptr += (String)movement;
   ptr += (String)tempMove;
   ptr += " [0/1]</p>";
-  ptr += "<p><b>Last movement:</b> ";
-  ptr += (String)lastMovementDay;
-  ptr += ", ";
-  ptr += (String)lastMovementTime;
-  ptr += "</p>";
-  ptr +="<p><b>Allow LEDs:</b> ";
+  if ((lastMovementDay != NULL) || (lastMovementTime != NULL)) {
+    ptr += "<p><b>Last movement:</b> ";
+    ptr += (String)lastMovementDay;
+    ptr += ", ";
+    ptr += (String)lastMovementTime;
+    ptr += "</p>";
+  }
+  ptr += "<p><b>Allow LEDs:</b> ";
   ptr += (String)allowLEDs;
-  ptr +="</p>";
-  ptr +="<p></p>";
+  ptr += "</p>";
+  ptr += "<p></p>";
 
   if (allowLEDs) {
     ptr += "<th colspan=\"2\"><p><a href=\"/LEDoff\"><button class=\"button\">LEDs allowed</button></a></p></th>";
   } else {
-    ptr += "<th colspan=\"2>\"<p><a href=\"/LEDon\"><button class=\"button button2\">No LEDs</button></a></p></th>";
+    ptr += "<th colspan=\"2>\"<p><a href=\"/LEDon\"><button class=\"button button2\">LEDs disallowed</button></a></p></th>";
   }
   
-  ptr +="</div>\n";
-  ptr +="</body>\n";
-  ptr +="</html>\n";
+  ptr += "</div>\n";
+  ptr += "</body>\n";
+  ptr += "</html>\n";
+  return ptr;
+}
+
+String HTMLledsConfig(){
+  String ptr = "<!DOCTYPE html> <html>\n";
+  ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
+  ptr += "<title>RJD Monitor</title>\n";
+  ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: left;}\n";
+  ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
+  ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+  ptr += "</style>\n";
+  ptr += "</head>\n";
+  ptr += "<body>\n";
+  ptr += "<div id=\"webpage\">\n";
+  ptr += "<h1>SmyRaspi-1 configuration</h1>\n";
+  if (allowLEDs) {
+    ptr += "<p>LEDs allowed </p>";
+  } else {
+    ptr += "<p>LEDs disallowed </p>";
+  }
+  ptr += "</div>\n";
+  ptr += "</body>\n";
+  ptr += "</html>\n";
   return ptr;
 }
 
 String HTMLnotFound(){
   String ptr = "<!DOCTYPE html> <html>\n";
-  ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-  ptr +="<title>RJD Monitor</title>\n";
-  ptr +="<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: left;}\n";
-  ptr +="body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
-  ptr +="p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
-  ptr +="</style>\n";
-  ptr +="</head>\n";
-  ptr +="<body>\n";
-  ptr +="<div id=\"webpage\">\n";
-  ptr +="<h1>You know this 404 thing ?</h1>\n";
-  ptr +="<p>What you asked can not be found... :'( </p>";
-  ptr +="</div>\n";
-  ptr +="</body>\n";
-  ptr +="</html>\n";
+  ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
+  ptr += "<title>RJD Monitor</title>\n";
+  ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: left;}\n";
+  ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
+  ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+  ptr += "</style>\n";
+  ptr += "</head>\n";
+  ptr += "<body>\n";
+  ptr += "<div id=\"webpage\">\n";
+  ptr += "<h1>You know this 404 thing ?</h1>\n";
+  ptr += "<p>What you asked can not be found... :'( </p>";
+  ptr += "</div>\n";
+  ptr += "</body>\n";
+  ptr += "</html>\n";
   return ptr;
 }
 
