@@ -273,36 +273,28 @@ void thingSpeakRequestBeeHive() {
 
 // Handle HTML page calls
 void handle_OnConnect() {
-  digitalWrite(ESPLED, LOW);
+  if (allowLEDs){ digitalWrite(ESPLED, LOW);}
   getSensorData();
   server.send(200, "text/html", HTMLpresentData());
   digitalWrite(ESPLED, HIGH);
 }
 
 void handle_OnConnectLEDon() {
-  digitalWrite(ESPLED, LOW);
+  if (allowLEDs){ digitalWrite(ESPLED, LOW);}
   allowLEDs = true;
-  server.send(200, "text/html", HTMLledsConfig());
-  // server.send(200, "text/plain", "LEDs allowed");
-  delay(1000);
-  handle_OnConnect();
-  // refreshToRoot();
+  refreshToRoot();
   digitalWrite(ESPLED, HIGH);
 }
 
 void handle_OnConnectLEDoff() {
-  digitalWrite(ESPLED, LOW);
+  if (allowLEDs){ digitalWrite(ESPLED, LOW);}
   allowLEDs = false;
-  server.send(200, "text/html", HTMLledsConfig());
-  // server.send(200, "text/plain", "LEDs disallowed");
-  delay(1000);
-  handle_OnConnect();
-  // refreshToRoot();
+  refreshToRoot();
   digitalWrite(ESPLED, HIGH);
 }
 
 void handle_OnConnectAbout() {
-  digitalWrite(ESPLED, LOW);
+  if (allowLEDs){ digitalWrite(ESPLED, LOW);}
   server.send(200, "text/plain", "A smart home automation! (C) Apostolos Smyrnakis");
   digitalWrite(ESPLED, HIGH);
 }
@@ -312,8 +304,8 @@ void handle_NotFound(){
 }
 
 void refreshToRoot() {
-  String rfr = "<head>";
-  rfr += "<meta http-equiv=\"refresh\" content=\"0;url=/\">\n";
+  String rfr = "<HEAD>";
+  rfr += "<meta http-equiv=\"refresh\" content=\"0;url=/\">";
   rfr += "</head>";
   server.send(200, "text/html", rfr);
 }
@@ -363,9 +355,6 @@ String HTMLpresentData(){
     ptr += (String)lastMovementTime;
     ptr += "</p>";
   }
-  ptr += "<p><b>Allow LEDs:</b> ";
-  ptr += (String)allowLEDs;
-  ptr += "</p>";
   ptr += "<p></p>";
 
   if (allowLEDs) {
@@ -380,28 +369,28 @@ String HTMLpresentData(){
   return ptr;
 }
 
-String HTMLledsConfig(){
-  String ptr = "<!DOCTYPE html> <html>\n";
-  ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-  ptr += "<title>RJD Monitor</title>\n";
-  ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: left;}\n";
-  ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
-  ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
-  ptr += "</style>\n";
-  ptr += "</head>\n";
-  ptr += "<body>\n";
-  ptr += "<div id=\"webpage\">\n";
-  ptr += "<h1>SmyRaspi-1 configuration</h1>\n";
-  if (allowLEDs) {
-    ptr += "<p>LEDs allowed </p>";
-  } else {
-    ptr += "<p>LEDs disallowed </p>";
-  }
-  ptr += "</div>\n";
-  ptr += "</body>\n";
-  ptr += "</html>\n";
-  return ptr;
-}
+// String HTMLledsConfig(){
+//   String ptr = "<!DOCTYPE html> <html>\n";
+//   ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
+//   ptr += "<title>RJD Monitor</title>\n";
+//   ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
+//   ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
+//   ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+//   ptr += "</style>\n";
+//   ptr += "</head>\n";
+//   ptr += "<body>\n";
+//   ptr += "<div id=\"webpage\">\n";
+//   ptr += "<h1>SmyRaspi-1 configuration</h1>\n";
+//   if (allowLEDs) {
+//     ptr += "<p>LEDs enabled</p>";
+//   } else {
+//     ptr += "<p>LEDs disabled</p>";
+//   }
+//   ptr += "</div>\n";
+//   ptr += "</body>\n";
+//   ptr += "</html>\n";
+//   return ptr;
+// }
 
 String HTMLnotFound(){
   String ptr = "<!DOCTYPE html> <html>\n";
@@ -438,8 +427,7 @@ void handlerLED() {
     digitalWrite(GREEN_LED, HIGH);
     digitalWrite(BLUE_LED, LOW);
     digitalWrite(RED_LED, LOW);
-  } else if ((analogValue >= 150) && (analogValue < 300))
-  {
+  } else if ((analogValue >= 150) && (analogValue < 300)) {
     digitalWrite(GREEN_LED, HIGH);
     digitalWrite(BLUE_LED, LOW);
     digitalWrite(RED_LED, HIGH);
@@ -747,7 +735,7 @@ void loop() {
     lastMovementDay = dayToday;
   }
 
-  (movement) ? digitalWrite(PCBLED, LOW) : digitalWrite(PCBLED, HIGH);
+  if (allowLEDs){ (movement) ? digitalWrite(PCBLED, LOW) : digitalWrite(PCBLED, HIGH);}
 
   if ((analogValue > 850) && allowFlamePrint) {
     Serial.print("WARNING: flame detected! (");
@@ -761,9 +749,17 @@ void loop() {
     allowFlamePrint = true;
   }
 
-  handlerLED();
-  // handlerLED_v2();
-  // handlerLED_v3();
+  if (allowLEDs) { 
+    handlerLED();
+    // handlerLED_v2();
+    // handlerLED_v3();
+  } else {
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
+    digitalWrite(RED_LED, LOW);
+    digitalWrite(ESPLED, HIGH);
+    digitalWrite(PCBLED, HIGH);
+  }
 
   // pull the time
   if ((currentMillis % ntpInterval == 0) && (allowNtp)) {
@@ -778,7 +774,7 @@ void loop() {
 
   // upload data to ThingSpeak
   if (currentMillis % uploadInterval == 0) {
-    digitalWrite(ESPLED, LOW);
+    if (allowLEDs){ digitalWrite(ESPLED, LOW);}
     getSensorData();
 
     // Upload data to thingSpeak
