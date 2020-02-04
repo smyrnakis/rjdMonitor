@@ -317,8 +317,9 @@ String HTMLpresentData(){
   ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
   ptr += "<title>RJD Monitor</title>\n";
   ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
-  ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
-  ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
+  ptr += "body{margin-top: 50px;} h1 {color: #B4F9F3;margin: 50px auto 30px;}\n";
+  ptr += "body {color: white; background: black;}\n";
+  ptr += "p {font-size: 24px;color: #B4F9F3;margin-bottom: 10px;}\n";
   ptr += ".button { background-color: #195B6A; border: none; color: white; padding: 16px 50px;\n";
   ptr += "text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}\n";
   ptr += ".button2 { background-color: #77878A;}\n";
