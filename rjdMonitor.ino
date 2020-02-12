@@ -69,6 +69,7 @@ char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursd
 
 ESP8266WebServer server(80);
 WiFiClient client;
+HTTPClient httpLEDs;
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
@@ -234,6 +235,10 @@ void thingSpeakRequest() {
   else {
     Serial.println("ERROR: could not upload data to thingspeak!");
   }
+  // report movement to XmasLEDs handler
+  if (tempMove == true) {
+    movementReport();
+  }
 }
 
 // Sending data to Thingspeak (fill beeHive data)
@@ -269,6 +274,17 @@ void thingSpeakRequestBeeHive() {
   else {
     Serial.println("ERROR: could not upload data to thingspeak (beehive)!");
   }
+}
+
+// Sending movement info to XmasLEDs handler
+void movementReport() {
+  httpLEDs.begin("http://192.168.1.31/movement");
+  int httpCode = httpLEDs.GET();
+  // if (httpCode > 0) { //Check the returning code
+  //   String payload = httpLEDs.getString();   //Get the request response payload
+  //   Serial.println(payload);                     //Print the response payload
+  // }
+  httpLEDs.end();
 }
 
 // Handle HTML page calls
@@ -334,6 +350,9 @@ String HTMLpresentData(){
   ptr += "</p>";
   ptr += "<p><b>Timestamp:</b> ";
   ptr += (String)formatedTime;
+  ptr += "</p>";
+  ptr += "<p><b>Current millis:</b> ";
+  ptr += (String)millis();
   ptr += "</p>";
 
   ptr += "<p><b>Temperature:</b> ";
