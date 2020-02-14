@@ -52,6 +52,7 @@ bool tempMove = false;
 bool allowNtp = true;
 bool allowLEDs = true;
 bool allowFlamePrint = true;
+bool currentBedLEDstate = false;
 
 unsigned long flameMillis = 0;
 
@@ -69,7 +70,7 @@ char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursd
 
 ESP8266WebServer server(80);
 WiFiClient client;
-HTTPClient httpLEDs;
+HTTPClient XmasLEDs;
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
@@ -112,6 +113,8 @@ void setup() {
   server.on("/about", handle_OnConnectAbout);
   server.on("/LEDon", handle_OnConnectLEDon);
   server.on("/LEDoff", handle_OnConnectLEDoff);
+  server.on("/BedLedOn", handle_OnConnectbedLedOn);
+  server.on("/BedLedOff", handle_OnConnectbedLedOff);
   server.onNotFound(handle_NotFound);
   
   server.begin();
@@ -218,6 +221,8 @@ void thingSpeakRequest() {
     postStr += String(analogValue);
     postStr +="&field4=";
     postStr += String(tempMove);
+    postStr +="&field6=";
+    postStr += String(currentBedLEDstate);
     postStr += "\r\n\r\n";
 
     client.print("POST /update HTTP/1.1\n");
@@ -278,16 +283,15 @@ void thingSpeakRequestBeeHive() {
 
 // Sending movement info to XmasLEDs handler
 void movementReport() {
-  httpLEDs.begin("http://192.168.1.31/movement");
-  int httpCode = httpLEDs.GET();
+  XmasLEDs.begin("http://192.168.1.31/movement");
+  int httpCode = XmasLEDs.GET();
   // if (httpCode > 0) { //Check the returning code
-  //   String payload = httpLEDs.getString();   //Get the request response payload
+  //   String payload = XmasLEDs.getString();   //Get the request response payload
   //   Serial.println(payload);                     //Print the response payload
   // }
-  httpLEDs.end();
+  XmasLEDs.end();
 }
 
-// Handle HTML page calls
 void handle_OnConnect() {
   if (allowLEDs){ digitalWrite(ESPLED, LOW);}
   getSensorData();
@@ -306,6 +310,20 @@ void handle_OnConnectLEDoff() {
   if (allowLEDs){ digitalWrite(ESPLED, LOW);}
   allowLEDs = false;
   refreshToRoot();
+  digitalWrite(ESPLED, HIGH);
+}
+
+void handle_OnConnectbedLedOn() {
+  if (allowLEDs){ digitalWrite(ESPLED, LOW);}
+  currentBedLEDstate = true;
+  // refreshToRoot();
+  digitalWrite(ESPLED, HIGH);
+}
+
+void handle_OnConnectbedLedOff() {
+  if (allowLEDs){ digitalWrite(ESPLED, LOW);}
+  currentBedLEDstate = false;
+  // refreshToRoot();
   digitalWrite(ESPLED, HIGH);
 }
 
@@ -375,6 +393,9 @@ String HTMLpresentData(){
     ptr += (String)lastMovementTime;
     ptr += "</p>";
   }
+  ptr += "<p><b>Bedroom LEDs:</b> ";
+  ptr += (String)currentBedLEDstate;
+  ptr += " [0/1]</p>";
   ptr += "<p></p>";
 
   if (allowLEDs) {
@@ -388,29 +409,6 @@ String HTMLpresentData(){
   ptr += "</html>\n";
   return ptr;
 }
-
-// String HTMLledsConfig(){
-//   String ptr = "<!DOCTYPE html> <html>\n";
-//   ptr += "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
-//   ptr += "<title>RJD Monitor</title>\n";
-//   ptr += "<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}\n";
-//   ptr += "body{margin-top: 50px;} h1 {color: #444444;margin: 50px auto 30px;}\n";
-//   ptr += "p {font-size: 24px;color: #444444;margin-bottom: 10px;}\n";
-//   ptr += "</style>\n";
-//   ptr += "</head>\n";
-//   ptr += "<body>\n";
-//   ptr += "<div id=\"webpage\">\n";
-//   ptr += "<h1>SmyRaspi-1 configuration</h1>\n";
-//   if (allowLEDs) {
-//     ptr += "<p>LEDs enabled</p>";
-//   } else {
-//     ptr += "<p>LEDs disabled</p>";
-//   }
-//   ptr += "</div>\n";
-//   ptr += "</body>\n";
-//   ptr += "</html>\n";
-//   return ptr;
-// }
 
 String HTMLnotFound(){
   String ptr = "<!DOCTYPE html> <html>\n";
