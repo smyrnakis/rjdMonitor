@@ -49,7 +49,6 @@ float humidity;
 int analogValue = 0;
 bool movement = false;
 bool tempMove = false;
-bool allowNtp = true;
 bool allowLEDs = true;
 bool allowFlamePrint = true;
 bool currentBedLEDstate = false;
@@ -61,16 +60,20 @@ const int sensorsInterval = 6000;
 const int ntpInterval = 2000;
 const int secondInterval = 1000;
 
+unsigned long lastNTPtime = 0;
+unsigned long lastSensorTime = 0;
+unsigned long lastUploadTime = 0;
+
 const char* thinkSpeakAPIurl = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
 const char* autoRemoteURL = "autoremotejoaomgcd.appspot.com";
 
 // Network Time Protocol
-const long utcOffsetInSeconds = 3600; // 1H (3600) for winter time / 2H (7200) for summer time
+const long utcOffsetInSeconds = 7200; // 1H (3600) for winter time / 2H (7200) for summer time
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 ESP8266WebServer server(80);
 WiFiClient client;
-HTTPClient XmasLEDs;
+HTTPClient clientXmasLEDs;
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
@@ -240,10 +243,6 @@ void thingSpeakRequest() {
   else {
     Serial.println("ERROR: could not upload data to thingspeak!");
   }
-  // report movement to XmasLEDs handler
-  if (tempMove == true) {
-    movementReport();
-  }
 }
 
 // Sending data to Thingspeak (fill beeHive data)
@@ -283,13 +282,14 @@ void thingSpeakRequestBeeHive() {
 
 // Sending movement info to XmasLEDs handler
 void movementReport() {
-  XmasLEDs.begin("http://192.168.1.31/movement");
-  int httpCode = XmasLEDs.GET();
-  // if (httpCode > 0) { //Check the returning code
-  //   String payload = XmasLEDs.getString();   //Get the request response payload
-  //   Serial.println(payload);                     //Print the response payload
+  clientXmasLEDs.setTimeout(8);
+  clientXmasLEDs.begin("http://192.168.1.31/movement");
+  int httpCode = clientXmasLEDs.GET();
+  // if (httpCode > 0) {
+  //   String payload = clientXmasLEDs.getString();
+  //   Serial.println(payload);
   // }
-  XmasLEDs.end();
+  clientXmasLEDs.end();
 }
 
 void handle_OnConnect() {
@@ -344,7 +344,6 @@ void refreshToRoot() {
   server.send(200, "text/html", rfr);
 }
 
-// HTML pages structure
 String HTMLpresentData(){
   String ptr = "<!DOCTYPE html> <html>\n";
   ptr += "<meta http-equiv=\"refresh\" content=\"5\" >\n";
@@ -380,8 +379,15 @@ String HTMLpresentData(){
   ptr += (String)humidity;
   ptr += "%</p>";
   ptr += "<p><b>IR sensor:</b> ";
-  ptr += (String)analogValue;
-  ptr += " [0-1024]</p>";
+  // ptr += (String)analogValue;
+  // ptr += " [0-1024]</p>";
+  float tempAnalogValuePerCent = 0.0;
+  tempAnalogValuePerCent = (analogValue * 100) / 1024;
+  ptr += (String)tempAnalogValuePerCent;
+  ptr += "%</p>";
+  ptr += "<p><b>Bedroom LEDs:</b> ";
+  ptr += (String)currentBedLEDstate;
+  ptr += " [0/1]</p>";
   ptr += "<p><b>Movement:</b> ";
   // ptr += (String)movement;
   ptr += (String)tempMove;
@@ -393,9 +399,6 @@ String HTMLpresentData(){
     ptr += (String)lastMovementTime;
     ptr += "</p>";
   }
-  ptr += "<p><b>Bedroom LEDs:</b> ";
-  ptr += (String)currentBedLEDstate;
-  ptr += " [0/1]</p>";
   ptr += "<p></p>";
 
   if (allowLEDs) {
@@ -429,14 +432,13 @@ String HTMLnotFound(){
   return ptr;
 }
 
-
-// Read all sensors
 void getSensorData() {
   temperature = dht.readTemperature();
   humidity = dht.readHumidity();
   // movement = digitalRead(PIRIN);
   // analogValue = analogRead(ANLG_IN);
   // analogValue = map(analogValue, 0, 1024, 1024, 0);
+  lastSensorTime = millis();
 }
 
 // LED color for IR level
@@ -692,7 +694,6 @@ void handlerLED_v3 () {
   analogWrite(BLUE_LED, blueVal);
 }
 
-// Get the time
 void pullNTPtime(bool printData) {
   timeClient.update();
   formatedTime = timeClient.getFormattedTime();
@@ -708,9 +709,9 @@ void pullNTPtime(bool printData) {
     // Serial.println(timeClient.getSeconds());
     Serial.println(timeClient.getFormattedTime()); // format time like 23:05:00
   }
+  lastNTPtime = millis();
 }
 
-// Serial print data
 void serialPrintAll() {
   String tempDayTime;
   tempDayTime = dayToday;
@@ -738,10 +739,8 @@ void loop() {
   // Handle OTA firmware updates
   ArduinoOTA.handle();
 
-  unsigned long currentMillis = millis();
-
   // check IR level every 100ms
-  if (currentMillis % 100 == 0) {
+  if (millis() % 100 == 0) {
     analogValue = analogRead(ANLG_IN);
     analogValue = map(analogValue, 0, 1024, 1024, 0);
     movement = digitalRead(PIRIN);
@@ -763,7 +762,7 @@ void loop() {
     allowFlamePrint = false;
     flameMillis = millis();
   }
-  if ((analogValue < 850) && !allowFlamePrint && (currentMillis >= flameMillis+60000)) {
+  if ((analogValue < 850) && !allowFlamePrint && (millis() >= flameMillis+60000)) {
     allowFlamePrint = true;
   }
 
@@ -780,34 +779,32 @@ void loop() {
   }
 
   // pull the time
-  if ((currentMillis % ntpInterval == 0) && (allowNtp)) {
+  if (millis() > lastNTPtime + ntpInterval) {
     pullNTPtime(false);
-    allowNtp = false;
   }
 
   // pull sensor data
-  if (currentMillis % sensorsInterval == 0) {
+  if (millis() > lastSensorTime + sensorsInterval) {
     getSensorData();
   }
 
   // upload data to ThingSpeak
-  if (currentMillis % uploadInterval == 0) {
+  if (millis() > lastUploadTime + uploadInterval) {
     if (allowLEDs){ digitalWrite(ESPLED, LOW);}
     getSensorData();
+    serialPrintAll();
 
-    // Upload data to thingSpeak
     thingSpeakRequest();
-    // Upload data to beehive
     // thingSpeakRequestBeeHive();
 
-    serialPrintAll();
-    tempMove = false;
-    digitalWrite(ESPLED, HIGH);
-  }
+    // report movement to XmasLEDs handler
+    if (tempMove) {
+      movementReport();
+    }
 
-  // debounce per second
-  if (currentMillis % secondInterval == 0) {
-    allowNtp = true;
+    tempMove = false;
+    lastUploadTime = millis();
+    digitalWrite(ESPLED, HIGH);
   }
 
   // handle HTTP connections
