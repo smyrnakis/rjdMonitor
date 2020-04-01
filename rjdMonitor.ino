@@ -113,6 +113,7 @@ void setup() {
   Serial.println(localIPaddress);
 
   server.on("/", handle_OnConnect);
+  server.on("/restart", handle_OnRestart);
   server.on("/about", handle_OnConnectAbout);
   server.on("/LEDon", handle_OnConnectLEDon);
   server.on("/LEDoff", handle_OnConnectLEDoff);
@@ -290,6 +291,12 @@ void movementReport() {
   //   Serial.println(payload);
   // }
   clientXmasLEDs.end();
+}
+
+void handle_OnRestart() {
+  refreshToRoot();
+  delay(3000);
+  ESP.restart();
 }
 
 void handle_OnConnect() {
