@@ -382,8 +382,9 @@ String HTMLpresentData(){
   // ptr += (String)analogValue;
   // ptr += " [0-1024]</p>";
   float tempAnalogValuePerCent = 0.0;
-  tempAnalogValuePerCent = (analogValue * 100) / 1024;
-  ptr += (String)tempAnalogValuePerCent;
+  tempAnalogValuePerCent = (float)(((float)analogValue * 100.0) / 1024.0);
+  ptr += (float)tempAnalogValuePerCent;
+  // ptr += (String)tempAnalogValuePerCent;
   ptr += "%</p>";
   ptr += "<p><b>Bedroom LEDs:</b> ";
   ptr += (String)currentBedLEDstate;
