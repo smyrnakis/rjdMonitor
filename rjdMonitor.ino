@@ -59,10 +59,12 @@ const int uploadInterval = 15000;
 const int sensorsInterval = 6000;
 const int ntpInterval = 2000;
 const int secondInterval = 1000;
+const int autoRemoteMoveInterval = 60000;
 
 unsigned long lastNTPtime = 0;
 unsigned long lastSensorTime = 0;
 unsigned long lastUploadTime = 0;
+unsigned long lastAutoRemoteMoveTime = 0;
 
 const char* thinkSpeakAPIurl = "api.thingspeak.com"; // "184.106.153.149" or api.thingspeak.com
 const char* autoRemoteURL = "autoremotejoaomgcd.appspot.com";
@@ -282,7 +284,7 @@ void thingSpeakRequestBeeHive() {
 }
 
 // Sending movement info to XmasLEDs handler
-void movementReport() {
+void movementReport_XmasLEDs() {
   clientXmasLEDs.setTimeout(8);
   clientXmasLEDs.begin("http://192.168.1.31/movement");
   int httpCode = clientXmasLEDs.GET();
@@ -805,9 +807,14 @@ void loop() {
     thingSpeakRequest();
     // thingSpeakRequestBeeHive();
 
-    // report movement to XmasLEDs handler
+    // report movement to XmasLEDs handler AND AutoRemote
     if (tempMove) {
-      movementReport();
+      movementReport_XmasLEDs();
+
+      if (millis() > lastAutoRemoteMoveTime + autoRemoteMoveInterval) {
+        sendToAutoRemote("WARNING_movement-detected", autoRemotePlus6, autoRemotePass);
+        lastAutoRemoteMoveTime = millis();
+      }
     }
 
     tempMove = false;
